@@ -77,9 +77,10 @@ public class App {
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         centerPanel.setBackground(WINDOW_PALETTE[WINDOW_BACKGROUND]);
         GamePanel gamePanel = new GamePanel((int) (screenSize.getWidth() / 4));
-
+        gamePanel.gameThread.start(); // starts gamethread
         centerPanel.add(gamePanel);
 
+        // add everything to the main panel
         mainPanel.add(titlePanel, BorderLayout.NORTH);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         mainFrame.getContentPane().add(mainPanel, BorderLayout.CENTER);
