@@ -14,8 +14,8 @@ public class GameLogic {
     int numTilesGenerated;
     int mantissa; // 2 ^ etc
     int[][] boardState;
+    int[][] prevBoardState;
     int[] emptyRows;
-    int[] emptyCols;
 
     /**
      * Each time a game is created, pass settings to constructor
@@ -27,18 +27,18 @@ public class GameLogic {
         numTilesGenerated = 2;
         mantissa = 2;
         boardState = new int[boardHeight][boardWidth];
+        prevBoardState = new int[boardHeight][boardWidth];
         // initialize boardState
-        for (int i = 0; i < boardState.length; i++)
-            for (int n = 0; n < boardState[i].length; n++)
-                boardState[i][n] = -1;
-
+        for (int i = 0; i < boardState.length; i++) {
+            for (int n = 0; n < boardState[i].length; n++) {
+                boardState[i][n] = 0;
+                prevBoardState[i][n] = 0;
+            }
+        }
         // holds number of empty spaces in a row
         emptyRows = new int[boardHeight];
         for (int i = 0; i < emptyRows.length; i++)
             emptyRows[i] = boardWidth;
-        emptyCols = new int[boardWidth];
-        for (int i = 0; i < emptyCols.length; i++)
-            emptyCols[i] = boardHeight;
     }
 
     /**
@@ -47,61 +47,71 @@ public class GameLogic {
      */
     public void generateRandom() {
         int count = 0;
+
         while (count < numTilesGenerated) {
-            // generate tiles
-            int selectedRow = -1, selectedCol = -1;
-
-            int randRow = (int) (Math.random() * boardHeight);
-            int randCol = (int) (Math.random() * boardWidth);
-
-            if (emptyRows[randRow] <= 0) {
-                for (int i = randRow; i < (randRow + boardHeight); i++) {
-                    if (emptyRows[i % boardHeight] > 0) {
-                        selectedRow = i % boardHeight;
-                        emptyRows[selectedRow]++;
+            // select random row
+            int randRow = (int) (Math.random() * (double) boardHeight);
+            int prevRow = randRow;
+            // loop until find empty row
+            if (emptyRows[randRow] == 0) {
+                for (int i = randRow + 1; i < emptyRows.length + randRow; i++) {
+                    if (emptyRows[i % emptyRows.length] > 0) {
+                        randRow = i % emptyRows.length;
                         break;
                     }
                 }
-                // if all of the rows are empty, set lose condition to 0 and break out of while
-                if (selectedRow < 0)
+                if (randRow == prevRow) {
+                    // check lose condition
+                    // if lost, break;
+                    System.out.println("failed to generate row");
                     break;
-            } else {
-                selectedRow = randRow;
-                emptyRows[selectedRow]++;
+                }
             }
 
-            if (emptyCols[randCol] <= 0) {
-                for (int i = randCol; i < (randCol + boardWidth); i++) {
-                    if (emptyCols[i % boardWidth] > 0) {
-                        selectedCol = i % boardWidth;
-                        emptyCols[selectedCol]++;
+            // select random column
+            int randCol = (int) (Math.random() * (double) boardWidth);
+            int prevCol = randCol;
+            // loop until find empty column
+            if (boardState[randRow][randCol] != 0) {
+                int len = boardState[randRow].length;
+                for (int i = randCol + 1; i < len + randCol + 1; i++) {
+                    if (boardState[randRow][i % len] == 0) {
+                        randCol = i % len;
                         break;
                     }
                 }
-                // if all of the rows are empty, set lose condition to 0 and break out of while
-                if (selectedCol < 0)
+                if (randCol == prevCol) {
+                    System.out.println("failed to generate col");
                     break;
-            } else {
-                selectedCol = randCol;
-                emptyCols[selectedCol]++;
+                }
             }
-
-            // if successful
-            if (selectedRow >= 0 && selectedCol >= 0) {
-                // System.out.println(selectedRow + " " + selectedCol + "\n");
-                count++;
-            } else
-                break;
-        }
-
-        // check loss condition
-        if (count < numTilesGenerated) {
-            checkLost();
+            boardState[randRow][randCol] = 1;
+            emptyRows[randRow]--;
+            printBoard();
+            // check lose conditions
+            count++;
         }
     }
 
     public boolean checkLost() {
         return false;
+    }
+
+    public void copyBoard() {
+        for (int i = 0; i < boardState.length; i++)
+            for (int n = 0; n < boardState[i].length; n++)
+                prevBoardState[i][n] = boardState[i][n];
+    }
+
+    public void printBoard() {
+        System.out.println("--------------------");
+        for (int[] i : boardState) {
+            for (int n : i) {
+                System.out.print(n + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("--------------------");
     }
 
 }
