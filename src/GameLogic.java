@@ -1,7 +1,7 @@
 package src;
 
 /*
- * Should have
+//  * Should have
  * Variable board size
  * and then other stuff
  */
@@ -10,10 +10,16 @@ public class GameLogic {
 
     boolean loseCondition = false;
 
+    // add stuff to not let board width to get below 2x2
     int boardWidth, boardHeight;
     int numTilesGenerated;
     int mantissa; // 2 ^ etc
-    int[][] boardState;
+    int[][] boardState;// = {
+    // { 0, 0, 1, 2 },
+    // { 0, 0, 1, 2 },
+    // { 1, 0, 1, 2 },
+    // { 1, 0, 0, 2 },
+    // };
     int[][] prevBoardState;
     int[] emptyRows;
 
@@ -86,15 +92,149 @@ public class GameLogic {
                 }
             }
             boardState[randRow][randCol] = 1;
-            emptyRows[randRow]--;
-            printBoard();
+            // check empty rows
+            checkEmpty();
             // check lose conditions
             count++;
         }
     }
 
+    public void rightMove() {
+        for (int i = 0; i < boardHeight; i++) {
+            int start = boardWidth - 1;
+            int look = boardWidth - 2;
+            while (look != -1 && start != 0 && start != look) {
+                if (boardState[i][start] == 0 && boardState[i][look] != 0) { // fill empty space
+                    boardState[i][start] = boardState[i][look];
+                    boardState[i][look--] = 0;
+                } else if (boardState[i][look] != 0 && boardState[i][look] == boardState[i][start]) { // combine squares
+                    boardState[i][start] *= 2;
+                    boardState[i][look] = 0;
+                    start--;
+                    look = start - 1;
+                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                        && start - 1 != look) {
+                    // slides different tiles next to each other
+                    boardState[i][start - 1] = boardState[i][look];
+                    boardState[i][look] = 0;
+                    start--;
+                    look = start - 1;
+                } else if (boardState[i][look] != 0 && start - 1 == look) {
+                    start = look;
+                    look--;
+                } else {
+                    look--;
+                }
+            }
+        }
+    }
+
+    public void leftMove() {
+        for (int i = 0; i < boardHeight; i++) {
+            int start = 0;
+            int look = 1;
+            while (look != boardWidth && start != boardWidth - 1 && start != look) {
+                if (boardState[i][start] == 0 && boardState[i][look] != 0) { // fill empty space
+                    boardState[i][start] = boardState[i][look];
+                    boardState[i][look++] = 0;
+                } else if (boardState[i][look] != 0 && boardState[i][look] == boardState[i][start]) { // combine squares
+                    boardState[i][start] *= 2;
+                    boardState[i][look] = 0;
+                    start++;
+                    look = start + 1;
+                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                        && start + 1 != look) {
+                    // slides different tiles next to each other
+                    boardState[i][start + 1] = boardState[i][look];
+                    boardState[i][look] = 0;
+                    start++;
+                    look = start + 1;
+                } else if (boardState[i][look] != 0 && start + 1 == look) {
+                    start = look;
+                    look++;
+                } else {
+                    look++;
+                }
+            }
+        }
+    }
+
+    public void upMove() {
+        for (int i = 0; i < boardWidth; i++) {
+            int start = 0;
+            int look = 1;
+            while (look != boardWidth && start != boardWidth - 1 && start != look) {
+                if (boardState[start][i] == 0 && boardState[look][i] != 0) { // fill empty space
+                    boardState[start][i] = boardState[look][i];
+                    boardState[look][i] = 0;
+                    look++;
+                } else if (boardState[look][i] != 0 && boardState[look][i] == boardState[start][i]) { // combine squares
+                    boardState[start][i] *= 2;
+                    boardState[look][i] = 0;
+                    start++;
+                    look = start + 1;
+                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                        && start + 1 != look) {
+                    // slides different tiles next to each other
+                    boardState[start + 1][i] = boardState[look][i];
+                    boardState[look][i] = 0;
+                    start++;
+                    look = start + 1;
+                } else if (boardState[i][look] != 0 && start + 1 == look) {
+                    start = look;
+                    look++;
+                } else {
+                    look++;
+                }
+            }
+        }
+    }
+
+    public void downMove() {
+        for (int i = 0; i < boardWidth; i++) {
+            int start = boardHeight - 1;
+            int look = boardHeight - 2;
+            while (look != -1 && start != 0 && start != look) {
+                if (boardState[start][i] == 0 && boardState[look][i] != 0) { // fill empty space
+                    boardState[start][i] = boardState[look][i];
+                    boardState[look][i] = 0;
+                    look--;
+                } else if (boardState[look][i] != 0 && boardState[look][i] == boardState[start][i]) { // combine squares
+                    boardState[start][i] *= 2;
+                    boardState[look][i] = 0;
+                    start--;
+                    look = start - 1;
+                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                        && start - 1 != look) {
+                    // slides different tiles next to each other
+                    boardState[start - 1][i] = boardState[look][i];
+                    boardState[look][i] = 0;
+                    start--;
+                    look = start - 1;
+                } else if (boardState[i][look] != 0 && start - 1 == look) {
+                    start = look;
+                    look--;
+                } else {
+                    look--;
+                }
+            }
+        }
+    }
+
     public boolean checkLost() {
         return false;
+    }
+
+    public void checkEmpty() {
+        for (int i = 0; i < boardState.length; i++) {
+            int count = 4;
+            for (int n = 0; n < boardState[i].length; n++) {
+                if (boardState[i][n] != 0) {
+                    count--;
+                }
+            }
+            emptyRows[i] = count;
+        }
     }
 
     public void copyBoard() {
@@ -103,9 +243,22 @@ public class GameLogic {
                 prevBoardState[i][n] = boardState[i][n];
     }
 
+    public void printPrevBoard() {
+        System.out.println("--------------------");
+        for (int[] i : prevBoardState) {
+            for (int n : i) {
+                System.out.print(n + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("--------------------");
+    }
+
     public void printBoard() {
         System.out.println("--------------------");
+        int count = 0;
         for (int[] i : boardState) {
+            System.out.print(emptyRows[count++] + ": ");
             for (int n : i) {
                 System.out.print(n + " ");
             }
