@@ -4,7 +4,8 @@ import java.util.Scanner;
 
 public class Test {
     public static void main(String[] args) {
-        GameLogic gl = new GameLogic();
+        GameLogic gl = new GameLogic(10, 10, 4, 3);
+
         gl.generateRandom();
         Scanner scanner = new Scanner(System.in);
         String input = "";

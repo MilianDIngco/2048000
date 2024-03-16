@@ -15,13 +15,13 @@ public class GameLogic {
     int numTilesGenerated;
     int mantissa; // 2 ^ etc
     int[][] boardState;// = {
-    // { 0, 0, 1, 2 },
-    // { 0, 0, 1, 2 },
-    // { 1, 0, 1, 2 },
+    // { 1, 1, 4, 8 },
+    // { 1, 2, 1, 2 },
     // { 1, 0, 0, 2 },
+    // { 0, 0, 0, 0 },
     // };
     int[][] prevBoardState;
-    int[] emptyRows;
+    int[] emptyRows;// = { 0, 0, 2, 4 };
 
     /**
      * Each time a game is created, pass settings to constructor
@@ -32,6 +32,28 @@ public class GameLogic {
 
         numTilesGenerated = 2;
         mantissa = 2;
+        boardState = new int[boardHeight][boardWidth];
+        prevBoardState = new int[boardHeight][boardWidth];
+        // initialize boardState
+        for (int i = 0; i < boardState.length; i++) {
+            for (int n = 0; n < boardState[i].length; n++) {
+                boardState[i][n] = 0;
+                prevBoardState[i][n] = 0;
+            }
+        }
+        // holds number of empty spaces in a row
+        emptyRows = new int[boardHeight];
+        for (int i = 0; i < emptyRows.length; i++)
+            emptyRows[i] = boardWidth;
+    }
+
+    public GameLogic(int boardWidth, int boardHeight, int numTilesGenerated, int mantissa) {
+        this.boardWidth = (boardWidth < 3) ? 3 : boardWidth;
+        this.boardHeight = (boardHeight < 3) ? 3 : boardHeight;
+
+        this.numTilesGenerated = (numTilesGenerated < 1) ? 1 : numTilesGenerated;
+        this.mantissa = (mantissa < 2) ? 2 : mantissa;
+
         boardState = new int[boardHeight][boardWidth];
         prevBoardState = new int[boardHeight][boardWidth];
         // initialize boardState
@@ -69,7 +91,7 @@ public class GameLogic {
                 if (randRow == prevRow) {
                     // check lose condition
                     // if lost, break;
-                    System.out.println("failed to generate row");
+                    System.out.println("------------------------failed to generate row------------------------");
                     break;
                 }
             }
@@ -87,11 +109,12 @@ public class GameLogic {
                     }
                 }
                 if (randCol == prevCol) {
-                    System.out.println("failed to generate col");
+                    System.out.println("------------------------failed to generate col------------------------");
                     break;
                 }
             }
-            boardState[randRow][randCol] = 1;
+            int pickNum = (int) ((Math.random() < 0.9) ? Math.pow(mantissa, 1) : Math.pow(mantissa, 2));
+            boardState[randRow][randCol] = pickNum;
             // check empty rows
             checkEmpty();
             // check lose conditions
@@ -108,7 +131,7 @@ public class GameLogic {
                     boardState[i][start] = boardState[i][look];
                     boardState[i][look--] = 0;
                 } else if (boardState[i][look] != 0 && boardState[i][look] == boardState[i][start]) { // combine squares
-                    boardState[i][start] *= 2;
+                    boardState[i][start] *= mantissa;
                     boardState[i][look] = 0;
                     start--;
                     look = start - 1;
@@ -125,6 +148,7 @@ public class GameLogic {
                 } else {
                     look--;
                 }
+                checkEmpty();
             }
         }
     }
@@ -138,7 +162,7 @@ public class GameLogic {
                     boardState[i][start] = boardState[i][look];
                     boardState[i][look++] = 0;
                 } else if (boardState[i][look] != 0 && boardState[i][look] == boardState[i][start]) { // combine squares
-                    boardState[i][start] *= 2;
+                    boardState[i][start] *= mantissa;
                     boardState[i][look] = 0;
                     start++;
                     look = start + 1;
@@ -155,6 +179,7 @@ public class GameLogic {
                 } else {
                     look++;
                 }
+                checkEmpty();
             }
         }
     }
@@ -169,23 +194,24 @@ public class GameLogic {
                     boardState[look][i] = 0;
                     look++;
                 } else if (boardState[look][i] != 0 && boardState[look][i] == boardState[start][i]) { // combine squares
-                    boardState[start][i] *= 2;
+                    boardState[start][i] *= mantissa;
                     boardState[look][i] = 0;
                     start++;
                     look = start + 1;
-                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                } else if (boardState[look][i] != 0 && boardState[look][i] != boardState[start][i]
                         && start + 1 != look) {
                     // slides different tiles next to each other
                     boardState[start + 1][i] = boardState[look][i];
                     boardState[look][i] = 0;
                     start++;
                     look = start + 1;
-                } else if (boardState[i][look] != 0 && start + 1 == look) {
+                } else if (boardState[look][i] != 0 && start + 1 == look) {
                     start = look;
                     look++;
                 } else {
                     look++;
                 }
+                checkEmpty();
             }
         }
     }
@@ -200,23 +226,24 @@ public class GameLogic {
                     boardState[look][i] = 0;
                     look--;
                 } else if (boardState[look][i] != 0 && boardState[look][i] == boardState[start][i]) { // combine squares
-                    boardState[start][i] *= 2;
+                    boardState[start][i] *= mantissa;
                     boardState[look][i] = 0;
                     start--;
                     look = start - 1;
-                } else if (boardState[i][look] != 0 && boardState[i][look] != boardState[i][start]
+                } else if (boardState[look][i] != 0 && boardState[look][i] != boardState[start][i]
                         && start - 1 != look) {
                     // slides different tiles next to each other
                     boardState[start - 1][i] = boardState[look][i];
                     boardState[look][i] = 0;
                     start--;
                     look = start - 1;
-                } else if (boardState[i][look] != 0 && start - 1 == look) {
+                } else if (boardState[look][i] != 0 && start - 1 == look) {
                     start = look;
                     look--;
                 } else {
                     look--;
                 }
+                checkEmpty();
             }
         }
     }
@@ -227,7 +254,7 @@ public class GameLogic {
 
     public void checkEmpty() {
         for (int i = 0; i < boardState.length; i++) {
-            int count = 4;
+            int count = boardWidth;
             for (int n = 0; n < boardState[i].length; n++) {
                 if (boardState[i][n] != 0) {
                     count--;
@@ -258,11 +285,12 @@ public class GameLogic {
         System.out.println("--------------------");
         int count = 0;
         for (int[] i : boardState) {
-            System.out.print(emptyRows[count++] + ": ");
+            System.out.print(emptyRows[count++] + "{ ");
+            // System.out.print("{ ");
             for (int n : i) {
-                System.out.print(n + " ");
+                System.out.print(n + ", ");
             }
-            System.out.println();
+            System.out.print("},\n");
         }
         System.out.println("--------------------");
     }
